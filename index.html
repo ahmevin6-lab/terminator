@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terminatör — 90 Günlük Program</title>
+
+<style>
+:root {
+  --bg:#0d0d0b; --surface:#161614; --s2:#1e1e1b;
+  --border:rgba(255,255,255,0.07); --text:#f0ede6; --muted:#6b6a64;
+  --teal:#1D9E75; --teal-d:rgba(29,158,117,0.15);
+  --purple:#7F77DD; --purple-d:rgba(127,119,221,0.15);
+  --coral:#D85A30; --coral-d:rgba(216,90,48,0.15);
+  --amber:#EF9F27;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+nav{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border)}
+.logo{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:17px;font-weight:800}
+.logo span{color:var(--coral)}
+.tabs{display:flex;gap:4px}
+.tab{padding:7px 18px;border-radius:8px;font-size:13px;cursor:pointer;border:none;background:transparent;color:var(--muted);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-weight:500;transition:all .2s}
+.tab.active{background:var(--s2);color:var(--text)}
+.nav-day{font-size:12px;color:var(--muted)}
+
+.page{display:none;padding:28px}
+.page.active{display:block}
+
+/* ─── POMODORO ─── */
+.pomo-grid{display:grid;grid-template-columns:1fr 300px;gap:20px;max-width:960px;margin:0 auto}
+
+.timer-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:36px 28px;text-align:center}
+.sess-lbl{font-size:11px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:16px}
+.sess-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:99px;font-size:12px;font-weight:600;margin-bottom:28px;border:1px solid}
+
+/* Ring — fixed size, timer fits inside */
+.ring-wrap{position:relative;width:200px;height:200px;margin:0 auto 24px}
+.ring-svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--s2);stroke-width:8}
+.ring-fg{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .8s linear}
+.timer-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.timer-num{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:38px;font-weight:800;line-height:1;letter-spacing:-1px}
+.timer-lbl{font-size:11px;color:var(--muted);margin-top:5px;letter-spacing:.1em;text-transform:uppercase}
+
+.dots{display:flex;gap:8px;justify-content:center;margin-bottom:24px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--s2);border:1px solid var(--border);transition:all .3s}
+.dot.done{background:var(--teal);border-color:var(--teal)}
+.dot.active{background:var(--amber);border-color:var(--amber);box-shadow:0 0 8px rgba(239,159,39,.5)}
+
+.ctrl{display:flex;gap:10px;justify-content:center;margin-bottom:20px}
+.btn{padding:11px 26px;border-radius:10px;border:1px solid var(--border);background:var(--s2);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s}
+.btn:hover{border-color:rgba(255,255,255,.15)}
+.btn-go{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn-go:hover{background:#19b87e}
+.btn-sm{padding:8px 14px;font-size:12px}
+
+.track-sel label{font-size:11px;color:var(--muted);display:block;margin-bottom:8px;letter-spacing:.08em;text-transform:uppercase}
+.track-row{display:flex;gap:6px}
+.tbtn{flex:1;padding:9px 4px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;transition:all .2s}
+.tbtn.t-sel-tasarim{background:var(--teal-d);border-color:var(--teal);color:#5DCAA5}
+.tbtn.t-sel-video{background:var(--purple-d);border-color:var(--purple);color:#AFA9EC}
+.tbtn.t-sel-sozcul{background:var(--coral-d);border-color:var(--coral);color:#F0997B}
+
+/* side */
+.side{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px}
+.card-title{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;font-weight:600}
+
+.day-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dstat{background:var(--s2);border-radius:8px;padding:12px}
+.dstat-val{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:28px;font-weight:800;line-height:1}
+.dstat-lbl{font-size:11px;color:var(--muted);margin-top:3px}
+.dstat.full{grid-column:span 2}
+
+textarea.log-in{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:13px;resize:none;height:68px;outline:none;margin-bottom:8px}
+textarea.log-in:focus{border-color:rgba(255,255,255,.2)}
+textarea.log-in::placeholder{color:var(--muted)}
+
+.rules{display:flex;flex-direction:column;gap:7px}
+.rule{display:flex;gap:8px;font-size:12px;color:var(--muted);line-height:1.5}
+.rnum{color:var(--coral);font-weight:700;flex-shrink:0;font-size:11px}
+
+/* ─── PROGRESS ─── */
+.prog-wrap{max-width:880px;margin:0 auto}
+.prog-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.prog-head h2{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:24px;font-weight:800}
+
+.bigs{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.big{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px}
+.big-v{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:34px;font-weight:800;line-height:1;letter-spacing:-1px}
+.big-l{font-size:12px;color:var(--muted);margin-top:6px;font-weight:500;letter-spacing:.03em}
+
+.sec{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:14px}
+.sec-title{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;font-weight:600}
+
+.brow{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.brow:last-child{margin-bottom:0}
+.blbl{font-size:13px;width:110px;flex-shrink:0}
+.bbg{flex:1;height:7px;background:var(--s2);border-radius:99px;overflow:hidden}
+.bfill{height:100%;border-radius:99px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.bval{font-size:12px;color:var(--muted);width:56px;text-align:right;flex-shrink:0}
+
+.cal-grid{display:grid;grid-template-columns:repeat(15,1fr);gap:4px}
+.cd{aspect-ratio:1;border-radius:3px;background:var(--s2);cursor:pointer;transition:transform .15s}
+.cd:hover{transform:scale(1.25)}
+.cd.c-tasarim{background:var(--teal)}
+.cd.c-video{background:var(--purple)}
+.cd.c-sozcul{background:var(--coral)}
+.cd.c-mix{background:var(--amber)}
+.cd.c-today{outline:2px solid #fff;outline-offset:1px}
+.cd.c-partial{background:#2a2a26;border:1px solid #3a3a36}
+
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.ldot{width:9px;height:9px;border-radius:2px}
+
+.log-sec{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px}
+.lentry{padding:11px 0;border-bottom:1px solid var(--border);display:flex;gap:14px;align-items:flex-start}
+.lentry:last-child{border-bottom:none}
+.lday{font-size:11px;color:var(--muted);flex-shrink:0;width:52px;padding-top:1px}
+.ltxt{font-size:13px;color:var(--text);line-height:1.55;flex:1}
+.lbadge{font-size:10px;padding:2px 8px;border-radius:99px;flex-shrink:0;font-weight:600}
+
+.toast{position:fixed;bottom:28px;right:28px;background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:13px 18px;font-size:13px;transform:translateY(70px);opacity:0;transition:all .25s;z-index:999;max-width:260px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* ─── WELCOME SCREEN ─── */
+#welcome{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px}
+.wcard{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:48px 44px;max-width:520px;width:100%;text-align:center}
+.wtag{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--coral);font-weight:700;margin-bottom:20px}
+.wname{font-size:36px;font-weight:800;line-height:1.1;margin-bottom:8px}
+.wname span{color:var(--teal)}
+.wsub{font-size:14px;color:var(--muted);margin-bottom:36px;line-height:1.6}
+.wrules{background:var(--s2);border-radius:14px;padding:20px 24px;margin-bottom:32px;text-align:left}
+.wrule-title{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:14px}
+.wrule-item{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text);line-height:1.5;margin-bottom:10px}
+.wrule-item:last-child{margin-bottom:0}
+.wrule-num{color:var(--coral);font-weight:700;font-size:12px;flex-shrink:0;width:20px}
+.wcb-row{display:flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:24px;cursor:pointer;transition:border-color .2s}
+.wcb-row:hover{border-color:var(--teal)}
+.wcb-row input{width:18px;height:18px;accent-color:var(--teal);cursor:pointer;flex-shrink:0}
+.wcb-lbl{font-size:13px;color:var(--text);text-align:left;line-height:1.5}
+.wbtn{width:100%;padding:16px;border-radius:12px;border:none;background:var(--teal);color:#fff;font-size:15px;font-weight:700;cursor:pointer;opacity:.4;pointer-events:none;transition:all .25s;font-family:inherit}
+.wbtn.ready{opacity:1;pointer-events:all}
+.wbtn.ready:hover{background:#19b87e}
+
+.wname-input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:13px 16px;color:var(--text);font-size:16px;font-weight:600;text-align:center;outline:none;margin-bottom:24px;font-family:inherit;transition:border-color .2s}
+.wname-input:focus{border-color:var(--teal)}
+.wname-input::placeholder{color:var(--muted);font-weight:400}
+.wgreeting{font-size:15px;color:var(--muted);margin-bottom:6px}
+</style>
+</head>
+<body>
+<!-- WELCOME -->
+<div id="welcome">
+  <div class="wcard">
+    <div class="wtag">90 Günlük Program</div>
+    <div class="wname">Merhaba,<br><span>Baran Çağlayan</span></div>
+    <div class="wsub">Bu program seni 3 ayda grafik tasarım, video editing<br>ve sözcülük alanında gerçek bir üretici yapacak.</div>
+
+    <div class="wrules">
+      <div class="wrule-title">Programın Kuralları</div>
+      <div class="wrule-item"><span class="wrule-num">01</span> Her gün tam 2 saat — ne fazla ne eksik</div>
+      <div class="wrule-item"><span class="wrule-num">02</span> 4 pomodoro × 25 dakika — mola dahil</div>
+      <div class="wrule-item"><span class="wrule-num">03</span> Telefon çalışma süresinde başka odada</div>
+      <div class="wrule-item"><span class="wrule-num">04</span> Molada oyun veya sosyal medya yok</div>
+      <div class="wrule-item"><span class="wrule-num">05</span> Her gün en az bir cümle günlük not</div>
+      <div class="wrule-item"><span class="wrule-num">06</span> Kötü gün bile masaya oturulur</div>
+      <div class="wrule-item"><span class="wrule-num">07</span> Sadece dünkü Baran ile yarışılır</div>
+    </div>
+
+    <label class="wcb-row" for="agree-cb">
+      <input type="checkbox" id="agree-cb" onchange="checkAgree()">
+      <span class="wcb-lbl">Yukarıdaki kuralları okudum, 90 gün boyunca eksiksiz uyacağıma söz veriyorum.</span>
+    </label>
+
+    <button class="wbtn" id="wbtn" onclick="startProgram()">Programa Başla →</button>
+  </div>
+</div>
+
+
+<nav>
+  <div class="logo">TERM<span>İ</span>NATÖR</div>
+  <div class="tabs">
+    <button class="tab active" onclick="showPage('pomodoro',this)">⏱ Pomodoro</button>
+    <button class="tab" onclick="showPage('progress',this)">📊 İlerleme</button>
+  </div>
+  <div class="nav-day" id="nav-day">Gün 1 / 90</div>
+  <div style="font-size:12px;color:var(--muted);font-weight:600">Baran Çağlayan</div>
+</nav>
+
+<!-- POMODORO -->
+<div class="page active" id="page-pomodoro">
+<div class="pomo-grid">
+
+  <div class="timer-card">
+    <div class="sess-lbl">Günlük Oturum</div>
+    <div id="sess-badge" class="sess-badge" style="background:var(--teal-d);border-color:var(--teal);color:#5DCAA5">🍅 Pomodoro 1 / 4</div>
+
+    <div class="ring-wrap">
+      <svg class="ring-svg" width="200" height="200" viewBox="0 0 200 200">
+        <circle class="ring-bg" cx="100" cy="100" r="84"/>
+        <circle class="ring-fg" id="ring" cx="100" cy="100" r="84"
+          stroke="#1D9E75" stroke-dasharray="528" stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-inner">
+        <div class="timer-num" id="t-num">25:00</div>
+        <div class="timer-lbl" id="t-lbl">Hazır</div>
+      </div>
+    </div>
+
+    <div class="dots" id="dots">
+      <div class="dot active" id="d0"></div>
+      <div class="dot" id="d1"></div>
+      <div class="dot" id="d2"></div>
+      <div class="dot" id="d3"></div>
+    </div>
+
+    <div class="ctrl">
+      <button class="btn btn-go" id="btn-go" onclick="toggleTimer()">▶ Başla</button>
+      <button class="btn" onclick="resetTimer()">↺ Sıfırla</button>
+    </div>
+
+    <div class="track-sel">
+      <label>Hangi alanda çalışıyorsun?</label>
+      <div class="track-row">
+        <button class="tbtn" id="tb-tasarim" onclick="selTrack('tasarim')">🎨 Grafik</button>
+        <button class="tbtn" id="tb-video"   onclick="selTrack('video')">🎬 Video</button>
+        <button class="tbtn" id="tb-sozcul"  onclick="selTrack('sozcul')">🎤 Sözcülük</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="card">
+      <div class="card-title">Bugün</div>
+      <div class="day-stats">
+        <div class="dstat">
+          <div class="dstat-val" id="s-pomo">0</div>
+          <div class="dstat-lbl">pomodoro</div>
+        </div>
+        <div class="dstat">
+          <div class="dstat-val" id="s-min">0</div>
+          <div class="dstat-lbl">dakika</div>
+        </div>
+        <div class="dstat full">
+          <div class="dstat-val" id="s-streak" style="color:var(--amber)">0 🔥</div>
+          <div class="dstat-lbl">günlük seri</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Günün Notu</div>
+      <textarea class="log-in" id="log-in" placeholder="Bugün ne yaptın? (tek cümle yeter)"></textarea>
+      <button class="btn btn-sm" style="width:100%" onclick="saveLog()">Kaydet →</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Altın Kurallar</div>
+      <div class="rules">
+        <div class="rule"><span class="rnum">01</span> Tam 2 saat — ne fazla ne eksik</div>
+        <div class="rule"><span class="rnum">02</span> Telefon başka odada</div>
+        <div class="rule"><span class="rnum">03</span> Molada oyun açma</div>
+        <div class="rule"><span class="rnum">04</span> Her gün tek cümle kayıt</div>
+        <div class="rule"><span class="rnum">05</span> Kötü gün bile masaya otur</div>
+        <div class="rule"><span class="rnum">06</span> Sadece dünkü seninle yarış</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- PROGRESS -->
+<div class="page" id="page-progress">
+<div class="prog-wrap">
+  <div class="prog-head">
+    <h2>90 Günlük İlerleme</h2>
+    <button class="btn btn-sm" onclick="resetAll()">Sıfırla</button>
+  </div>
+
+  <div class="bigs">
+    <div class="big"><div class="big-v" id="b-days" style="color:var(--teal)">0</div><div class="big-l">TAMAMLANAN GÜN</div></div>
+    <div class="big"><div class="big-v" id="b-pomo">0</div><div class="big-l">TOPLAM POMODORO</div></div>
+    <div class="big"><div class="big-v" id="b-hours">0</div><div class="big-l">TOPLAM SAAT</div></div>
+    <div class="big"><div class="big-v" id="b-streak" style="color:var(--amber)">0 🔥</div><div class="big-l">EN UZUN SERİ</div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Alan Dağılımı</div>
+    <div class="brow"><div class="blbl">🎨 Grafik</div><div class="bbg"><div class="bfill" id="bf-t" style="background:var(--teal);width:0%"></div></div><div class="bval" id="bv-t">0 dk</div></div>
+    <div class="brow"><div class="blbl">🎬 Video</div><div class="bbg"><div class="bfill" id="bf-v" style="background:var(--purple);width:0%"></div></div><div class="bval" id="bv-v">0 dk</div></div>
+    <div class="brow"><div class="blbl">🎤 Sözcülük</div><div class="bbg"><div class="bfill" id="bf-s" style="background:var(--coral);width:0%"></div></div><div class="bval" id="bv-s">0 dk</div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">90 Günlük Harita — tıkla: tamamlandı işaretle</div>
+    <div class="cal-grid" id="cal"></div>
+    <div class="legend">
+      <div class="leg"><div class="ldot" style="background:var(--teal)"></div> Grafik</div>
+      <div class="leg"><div class="ldot" style="background:var(--purple)"></div> Video</div>
+      <div class="leg"><div class="ldot" style="background:var(--coral)"></div> Sözcülük</div>
+      <div class="leg"><div class="ldot" style="background:var(--amber)"></div> Karışık</div>
+      <div class="leg"><div class="ldot" style="background:var(--s2);border:1px solid var(--border)"></div> Bekliyor</div>
+    </div>
+  </div>
+
+  <div class="log-sec">
+    <div class="sec-title">Günlük Kayıtlar</div>
+    <div id="log-hist"><div style="color:var(--muted);font-size:13px">Henüz kayıt yok.</div></div>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CIRC = 2 * Math.PI * 84; // 527.8
+const WORK = 25 * 60, BREAK = 5 * 60;
+
+let state = JSON.parse(localStorage.getItem('trmntr3') || 'null') || {
+  startDate: new Date().toISOString().split('T')[0],
+  days: {}, totalPomos: 0
+};
+
+let interval = null, running = false;
+let phase = 'work', donePomo = 0, timeLeft = WORK;
+let track = 'tasarim';
+
+function save(){ localStorage.setItem('trmntr3', JSON.stringify(state)); }
+function today(){ return new Date().toISOString().split('T')[0]; }
+function dayNum(){
+  const diff = new Date(today()) - new Date(state.startDate);
+  return Math.floor(diff/86400000)+1;
+}
+
+function showPage(id, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='progress') renderProgress();
+}
+
+function selTrack(t){
+  track = t;
+  document.querySelectorAll('.tbtn').forEach(b=>b.className='tbtn');
+  document.getElementById('tb-'+t).className='tbtn t-sel-'+t;
+  updateColors();
+}
+
+function updateColors(){
+  const ring = document.getElementById('ring');
+  const badge = document.getElementById('sess-badge');
+  const map = {
+    tasarim:['#1D9E75','var(--teal-d)','var(--teal)','#5DCAA5'],
+    video:  ['#7F77DD','var(--purple-d)','var(--purple)','#AFA9EC'],
+    sozcul: ['#D85A30','var(--coral-d)','var(--coral)','#F0997B']
+  };
+  const [stroke, bg, border, color] = map[track] || map.tasarim;
+  ring.style.stroke = phase==='break' ? '#EF9F27' : stroke;
+  badge.style.background = bg;
+  badge.style.borderColor = border;
+  badge.style.color = color;
+}
+
+function toggleTimer(){
+  if(running){ running=false; clearInterval(interval); document.getElementById('btn-go').textContent='▶ Devam'; }
+  else { running=true; document.getElementById('btn-go').textContent='⏸ Duraklat'; interval=setInterval(tick,1000); }
+}
+
+function tick(){
+  timeLeft--;
+  renderTime();
+  if(timeLeft<=0) nextPhase();
+}
+
+function nextPhase(){
+  clearInterval(interval); running=false;
+  if(phase==='work'){
+    donePomo++;
+    const d=today();
+    if(!state.days[d]) state.days[d]={pomos:0,track,log:''};
+    state.days[d].pomos++;
+    state.days[d].track=track;
+    state.totalPomos++;
+    save(); updateSide(); updateDots();
+    if(donePomo>=4){
+      toast('🏆 Günlük 2 saat tamamlandı! Muhteşem!');
+      document.getElementById('btn-go').textContent='✅ Bitti';
+      document.getElementById('btn-go').disabled=true;
+      document.getElementById('t-lbl').textContent='TAMAMLANDI';
+      return;
+    }
+    phase='break'; timeLeft=BREAK;
+    document.getElementById('sess-badge').textContent='☕ Mola '+donePomo+' / 4';
+    document.getElementById('t-lbl').textContent='MOLA';
+    document.getElementById('ring').style.stroke='#EF9F27';
+    toast('☕ Mola! 5 dk — telefona bakma!');
+  } else {
+    phase='work'; timeLeft=WORK;
+    document.getElementById('sess-badge').textContent='🍅 Pomodoro '+(donePomo+1)+' / 4';
+    document.getElementById('t-lbl').textContent='ÇALIŞMA';
+    updateColors();
+    toast('🍅 Pomodoro '+(donePomo+1)+' başlıyor!');
+  }
+  renderTime();
+  running=true; document.getElementById('btn-go').textContent='⏸ Duraklat';
+  interval=setInterval(tick,1000);
+}
+
+function resetTimer(){
+  clearInterval(interval); running=false; phase='work'; donePomo=0; timeLeft=WORK;
+  document.getElementById('btn-go').textContent='▶ Başla';
+  document.getElementById('btn-go').disabled=false;
+  document.getElementById('t-lbl').textContent='Hazır';
+  document.getElementById('sess-badge').textContent='🍅 Pomodoro 1 / 4';
+  updateDots(); renderTime(); updateColors();
+}
+
+function renderTime(){
+  const m=Math.floor(timeLeft/60), s=timeLeft%60;
+  document.getElementById('t-num').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const total=phase==='work'?WORK:BREAK;
+  const off=CIRC*((total-timeLeft)/total);
+  document.getElementById('ring').style.strokeDashoffset=(CIRC-off);
+}
+
+function updateDots(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('d'+i);
+    d.className='dot';
+    if(i<donePomo) d.classList.add('done');
+    else if(i===donePomo) d.classList.add('active');
+  }
+}
+
+function streak(){
+  let s=0, d=new Date(today());
+  while(true){
+    const k=d.toISOString().split('T')[0];
+    if(state.days[k]&&state.days[k].pomos>=4){s++;d.setDate(d.getDate()-1);}else break;
+  }
+  return s;
+}
+
+function updateSide(){
+  const d=today(), data=state.days[d]||{};
+  document.getElementById('s-pomo').textContent=data.pomos||0;
+  document.getElementById('s-min').textContent=(data.pomos||0)*25;
+  document.getElementById('s-streak').textContent=streak()+' 🔥';
+  document.getElementById('nav-day').textContent='Gün '+Math.min(dayNum(),90)+' / 90';
+}
+
+function saveLog(){
+  const txt=document.getElementById('log-in').value.trim();
+  if(!txt) return;
+  const d=today();
+  if(!state.days[d]) state.days[d]={pomos:0,track,log:''};
+  state.days[d].log=txt;
+  save(); document.getElementById('log-in').value=''; toast('📝 Kayıt eklendi!');
+}
+
+function renderProgress(){
+  const keys=Object.keys(state.days);
+  const comp=keys.filter(k=>(state.days[k].pomos||0)>=4).length;
+  const hrs=Math.round((state.totalPomos||0)*25/60);
+  document.getElementById('b-days').textContent=comp;
+  document.getElementById('b-pomo').textContent=state.totalPomos||0;
+  document.getElementById('b-hours').textContent=hrs;
+  document.getElementById('b-streak').textContent=longestStreak()+' 🔥';
+
+  let tM=0,vM=0,sM=0;
+  keys.forEach(k=>{
+    const p=(state.days[k].pomos||0)*25, t=state.days[k].track||'tasarim';
+    if(t==='tasarim')tM+=p; else if(t==='video')vM+=p; else sM+=p;
+  });
+  const mx=Math.max(tM,vM,sM,1);
+  document.getElementById('bf-t').style.width=(tM/mx*100)+'%';
+  document.getElementById('bf-v').style.width=(vM/mx*100)+'%';
+  document.getElementById('bf-s').style.width=(sM/mx*100)+'%';
+  document.getElementById('bv-t').textContent=tM+' dk';
+  document.getElementById('bv-v').textContent=vM+' dk';
+  document.getElementById('bv-s').textContent=sM+' dk';
+
+  renderCal(); renderLogs();
+}
+
+function longestStreak(){
+  let mx=0,cur=0;
+  for(let i=0;i<90;i++){
+    const d=new Date(state.startDate); d.setDate(d.getDate()+i);
+    const k=d.toISOString().split('T')[0];
+    if(state.days[k]&&state.days[k].pomos>=4){cur++;mx=Math.max(mx,cur);}else cur=0;
+  }
+  return mx;
+}
+
+function renderCal(){
+  const g=document.getElementById('cal'); g.innerHTML='';
+  const t=today();
+  for(let i=0;i<90;i++){
+    const d=new Date(state.startDate); d.setDate(d.getDate()+i);
+    const k=d.toISOString().split('T')[0];
+    const el=document.createElement('div');
+    el.className='cd'; el.title='Gün '+(i+1);
+    if(k===t) el.classList.add('c-today');
+    const data=state.days[k];
+    if(data&&data.pomos>=4) el.classList.add('c-'+(data.track||'mix'));
+    else if(data&&data.pomos>0) el.classList.add('c-partial');
+    el.onclick=()=>toggleDay(k);
+    g.appendChild(el);
+  }
+}
+
+function toggleDay(k){
+  if(!state.days[k]) state.days[k]={pomos:4,track,log:''};
+  else if(state.days[k].pomos>=4) state.days[k].pomos=0;
+  else state.days[k].pomos=4;
+  save(); renderProgress();
+}
+
+function renderLogs(){
+  const h=document.getElementById('log-hist');
+  const entries=Object.keys(state.days).filter(k=>state.days[k].log).sort((a,b)=>b.localeCompare(a)).slice(0,20);
+  if(!entries.length){h.innerHTML='<div style="color:var(--muted);font-size:13px">Henüz kayıt yok.</div>';return;}
+  const cm={tasarim:['var(--teal-d)','#5DCAA5','🎨'],video:['var(--purple-d)','#AFA9EC','🎬'],sozcul:['var(--coral-d)','#F0997B','🎤']};
+  h.innerHTML=entries.map(k=>{
+    const data=state.days[k];
+    const n=Math.floor((new Date(k)-new Date(state.startDate))/86400000)+1;
+    const [bg,color,icon]=cm[data.track]||cm.tasarim;
+    return `<div class="lentry"><div class="lday">Gün ${n}</div><div class="ltxt">${data.log}</div><div class="lbadge" style="background:${bg};color:${color}">${icon}</div></div>`;
+  }).join('');
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function resetAll(){
+  if(!confirm('Tüm ilerleme silinecek. Emin misin?')) return;
+  state={startDate:today(),days:{},totalPomos:0};
+  save(); renderProgress(); toast('Sıfırlandı.');
+}
+
+
+function checkAgree(){
+  const cb = document.getElementById('agree-cb');
+  const btn = document.getElementById('wbtn');
+  btn.classList.toggle('ready', cb.checked);
+}
+function startProgram(){
+  document.getElementById('welcome').style.opacity='0';
+  document.getElementById('welcome').style.transition='opacity .4s';
+  setTimeout(()=>{ document.getElementById('welcome').style.display='none'; },400);
+}
+
+// init
+selTrack('tasarim');
+renderTime();
+updateSide();
+</script>
+</body>
+</html>
