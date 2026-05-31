@@ -150,6 +150,13 @@ textarea.log-in::placeholder{color:var(--muted)}
 .wname-input:focus{border-color:var(--teal)}
 .wname-input::placeholder{color:var(--muted);font-weight:400}
 .wgreeting{font-size:15px;color:var(--muted);margin-bottom:6px}
+
+.ai-btn{position:fixed;bottom:28px;left:28px;display:flex;align-items:center;gap:10px;padding:12px 20px;background:var(--surface);border:1px solid var(--border);border-radius:99px;cursor:pointer;text-decoration:none;transition:all .25s;z-index:998;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+.ai-btn:hover{border-color:var(--teal);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.ai-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal);animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
+.ai-lbl{font-size:13px;font-weight:600;color:var(--text)}
+.ai-sub{font-size:11px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -565,5 +572,13 @@ selTrack('tasarim');
 renderTime();
 updateSide();
 </script>
+
+<a class="ai-btn" href="https://notebooklm.google.com/notebook/f56fcb2d-1357-439d-b705-afe962c6cc80" target="_blank">
+  <div class="ai-dot"></div>
+  <div>
+    <div class="ai-lbl">AI Asistan</div>
+    <div class="ai-sub">Müfredata sor →</div>
+  </div>
+</a>
 </body>
 </html>
